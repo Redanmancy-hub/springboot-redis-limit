@@ -21,6 +21,9 @@ public class SpringbootRedisLimitApplication {
         log.info("项目启动耗时:{}s",stopwatch.elapsed().getSeconds());
     }
 
+    /**
+     * 将lua脚本注入到容器
+     */
     @Bean
     public DefaultRedisScript<Long> limitScript() {
         DefaultRedisScript<Long> redisScript = new DefaultRedisScript<>();

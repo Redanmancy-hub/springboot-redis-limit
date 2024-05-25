@@ -1,4 +1,4 @@
-package com.redislimit.springbootredis.entity;
+package com.redislimit.springbootredis.enums;
 
 public enum LimitType {
     /**

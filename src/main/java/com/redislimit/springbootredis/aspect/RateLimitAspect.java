@@ -1,16 +1,14 @@
 package com.redislimit.springbootredis.aspect;
 
-import com.redislimit.springbootredis.entity.LimitType;
+import com.redislimit.springbootredis.enums.LimitType;
 import com.redislimit.springbootredis.service.RateLimiter;
 import lombok.extern.slf4j.Slf4j;
 import org.aspectj.lang.JoinPoint;
 import org.aspectj.lang.annotation.Aspect;
 import org.aspectj.lang.annotation.Before;
 import org.aspectj.lang.reflect.MethodSignature;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.data.redis.core.script.DefaultRedisScript;
-import org.springframework.data.redis.core.script.RedisScript;
 import org.springframework.stereotype.Component;
 import org.springframework.web.context.request.RequestContextHolder;
 import org.springframework.web.context.request.ServletRequestAttributes;
@@ -20,6 +18,12 @@ import java.lang.reflect.Method;
 import java.util.Collections;
 import java.util.List;
 
+/**
+ * aop配置：
+ * 1.@Aspect:把当前类标识为一个切面来供容器读取
+ * 2.配置前置增强：@Before：使用redisTemplate来执行Lua脚本
+ * 3.生成一个用于限流的唯一键（key）
+ */
 @Aspect
 @Component
 @Slf4j
@@ -67,6 +71,7 @@ public class RateLimitAspect {
 
     public String getCombineKey(RateLimiter rateLimiter, JoinPoint point) {
         //从@RateLimiter注解中获取限流key rate_limit:
+        //这里应该使用stringBuffer，因为处理的时高并发的场景，需要线程安全的
         StringBuffer stringBuffer = new StringBuffer(rateLimiter.key());
         //判断@RateLimiter注解的 限流类型
         if (rateLimiter.limitType() == LimitType.IP) {
@@ -75,15 +80,17 @@ public class RateLimitAspect {
             stringBuffer.append(request.getHeader("Host")).append("-");
         }
 
+        // 使用反射：来获取对象的方法和属性
+        //MethodSignature：方法签名接口，用于获取方法对象的方法
         MethodSignature signature = (MethodSignature) point.getSignature();
         //得到Method对象
         Method method = signature.getMethod();
         //得到Class
         Class<?> targetClass = method.getDeclaringClass();
-        //将运行时类名和方法名进行拼接
+        //构建组合key：将运行时类名和方法名进行拼接
         stringBuffer.append(targetClass.getName()).append("-").append(method.getName());
-        //ip: rate_limit:localhost:8080-com.llp.llpjavamail.controller.HelloController-hello
-        //default: rate_limit:com.llp.llpjavamail.controller.HelloController-hello
+        //ip: rate_limit:localhost:8099-com.redislimit.springbootredis.controller.LimitController-IPLimit
+        //default: rate_limit:com.redislimit.springbootredis.controller.LimitController-defaultLimit
         System.out.println(stringBuffer.toString());
         return stringBuffer.toString();
     }
