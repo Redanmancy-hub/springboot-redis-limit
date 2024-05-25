@@ -17,7 +17,7 @@
 ![image](https://github.com/Redanmancy-hub/springboot-redis-limit/assets/120354668/b1629a87-7313-4966-b0c8-0ec7e1d4e652)
 
 
-四：AOP：
+四：AOP配置：
  * 1.@Aspect:把当前类标识为一个切面来供容器读取
  * 2.配置前置增强：@Before：使用redisTemplate来执行Lua脚本
  * 3.生成一个用于限流的唯一键（key）
